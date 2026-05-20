@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Advanced Text Compare Tool</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+  background:#f3f4f6;
+  color:#111827;
+  padding:24px;
+}
+
+.app{
+  max-width:1400px;
+  margin:auto;
+}
+
+.header{
+  background:#111827;
+  color:#fff;
+  padding:24px;
+  border-radius:18px;
+  margin-bottom:20px;
+}
+
+.header h1{
+  font-size:28px;
+  margin-bottom:10px;
+}
+
+.header p{
+  color:#d1d5db;
+  line-height:1.6;
+  font-size:14px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.card{
+  background:#fff;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid #e5e7eb;
+  box-shadow:0 10px 25px rgba(0,0,0,.05);
+}
+
+.card-head{
+  padding:16px 18px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.card-head h2{
+  font-size:18px;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+button{
+  border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13px;
+  color:#fff;
+  background:#111827;
+}
+
+button.blue{
+  background:#2563eb;
+}
+
+button.green{
+  background:#15803d;
+}
+
+button.red{
+  background:#dc2626;
+}
+
+button.gray{
+  background:#6b7280;
+}
+
+textarea{
+  width:100%;
+  min-height:600px;
+  border:none;
+  outline:none;
+  resize:vertical;
+  padding:20px;
+  line-height:1.7;
+  font-size:14px;
+}
+
+.options{
+  padding:16px 18px;
+  border-bottom:1px solid #e5e7eb;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+}
+
+.option input{
+  width:17px;
+  height:17px;
+}
+
+.result{
+  margin-top:20px;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid #e5e7eb;
+  overflow:hidden;
+}
+
+.result-inner{
+  padding:20px;
+}
+
+.status{
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:18px;
+}
+
+.same{
+  color:#15803d;
+}
+
+.diff{
+  color:#dc2626;
+}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+}
+
+.box{
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:16px;
+}
+
+.box h3{
+  font-size:14px;
+  color:#6b7280;
+  margin-bottom:8px;
+}
+
+.box p{
+  font-size:24px;
+  font-weight:bold;
+}
+
+.line-results{
+  margin-top:25px;
+  border-top:1px solid #e5e7eb;
+  padding-top:20px;
+}
+
+.line{
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:10px;
+  border:1px solid #e5e7eb;
+  font-size:14px;
+  line-height:1.7;
+}
+
+.match{
+  background:#ecfdf5;
+}
+
+.missing{
+  background:#fef2f2;
+}
+
+.extra{
+  background:#eff6ff;
+}
+
+.tag{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:11px;
+  color:#fff;
+  margin-bottom:8px;
+}
+
+.tag.green{
+  background:#15803d;
+}
+
+.tag.red{
+  background:#dc2626;
+}
+
+.tag.blue{
+  background:#2563eb;
+}
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#111827;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:10px;
+  display:none;
+}
+
+@media(max-width:1000px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .summary{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:600px){
+  .summary{
+    grid-template-columns:1fr;
+  }
+
+  .options{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <h1>Advanced Text Compare Tool</h1>
+    <p>
+      Paste Google Docs, Word content, or website text/HTML. 
+      Compare exact content while ignoring spaces, line breaks, formatting, and line numbers.
+      Checks only actual text content.
+    </p>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Source Content</h2>
+
+        <div class="actions">
+          <button class="gray" onclick="clearLeft()">Clear</button>
+          <button class="blue" onclick="pasteSample()">Sample</button>
+        </div>
+      </div>
+
+      <textarea id="leftText" placeholder="Paste Google Docs or Word content here..."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Compare Content / Website Text</h2>
+
+        <div class="actions">
+          <button class="gray" onclick="clearRight()">Clear</button>
+          <button class="green" onclick="compareText()">Compare</button>
+        </div>
+      </div>
+
+      <div class="options">
+
+        <label class="option">
+          <input type="checkbox" id="ignoreSpaces" checked>
+          Ignore Spaces
+        </label>
+
+        <label class="option">
+          <input type="checkbox" id="ignoreLines" checked>
+          Ignore Line Breaks
+        </label>
+
+        <label class="option">
+          <input type="checkbox" id="ignoreCase" checked>
+          Ignore Uppercase / Lowercase
+        </label>
+
+        <label class="option">
+          <input type="checkbox" id="ignoreSpecial" checked>
+          Ignore Special Characters
+        </label>
+
+      </div>
+
+      <textarea id="rightText" placeholder="Paste website content, HTML, or URL copied text here..."></textarea>
+    </div>
+
+  </div>
+
+  <div class="result">
+    <div class="card-head">
+      <h2>Comparison Result</h2>
+
+      <div class="actions">
+        <button class="blue" onclick="copyResult()">Copy Result</button>
+      </div>
+    </div>
+
+    <div class="result-inner">
+
+      <div id="status" class="status">
+        Waiting for comparison...
+      </div>
+
+      <div class="summary">
+
+        <div class="box">
+          <h3>Match Percentage</h3>
+          <p id="percent">0%</p>
+        </div>
+
+        <div class="box">
+          <h3>Total Words</h3>
+          <p id="totalWords">0</p>
+        </div>
+
+        <div class="box">
+          <h3>Matched Words</h3>
+          <p id="matchedWords">0</p>
+        </div>
+
+        <div class="box">
+          <h3>Different Words</h3>
+          <p id="diffWords">0</p>
+        </div>
+
+      </div>
+
+      <div class="line-results" id="lineResults"></div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+function showToast(message){
+  const toast = document.getElementById('toast');
+
+  toast.innerText = message;
+  toast.style.display = 'block';
+
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 1800);
+}
+
+function cleanHTML(text){
+  const div = document.createElement('div');
+  div.innerHTML = text;
+  return div.innerText || div.textContent || '';
+}
+
+function normalizeText(text){
+
+  text = cleanHTML(text);
+
+  if(document.getElementById('ignoreCase').checked){
+    text = text.toLowerCase();
+  }
+
+  if(document.getElementById('ignoreSpecial').checked){
+    text = text.replace(/[^\w\s]/g,' ');
+  }
+
+  if(document.getElementById('ignoreLines').checked){
+    text = text.replace(/\n/g,' ');
+  }
+
+  if(document.getElementById('ignoreSpaces').checked){
+    text = text.replace(/\s+/g,' ');
+  }
+
+  return text.trim();
+}
+
+function compareText(){
+
+  const left = document.getElementById('leftText').value;
+  const right = document.getElementById('rightText').value;
+
+  if(!left.trim() || !right.trim()){
+    showToast('Paste both contents');
+    return;
+  }
+
+  const cleanLeft = normalizeText(left);
+  const cleanRight = normalizeText(right);
+
+  const leftWords = cleanLeft.split(' ').filter(Boolean);
+  const rightWords = cleanRight.split(' ').filter(Boolean);
+
+  let matched = 0;
+  let missing = [];
+  let extra = [];
+
+  const rightMap = {};
+
+  rightWords.forEach(word => {
+    rightMap[word] = (rightMap[word] || 0) + 1;
+  });
+
+  leftWords.forEach(word => {
+
+    if(rightMap[word]){
+      matched++;
+      rightMap[word]--;
+    }else{
+      missing.push(word);
+    }
+
+  });
+
+  const leftMap = {};
+
+  leftWords.forEach(word => {
+    leftMap[word] = (leftMap[word] || 0) + 1;
+  });
+
+  rightWords.forEach(word => {
+
+    if(leftMap[word]){
+      leftMap[word]--;
+    }else{
+      extra.push(word);
+    }
+
+  });
+
+  const total = Math.max(leftWords.length, rightWords.length);
+
+  const percent = total
+    ? Math.round((matched / total) * 100)
+    : 0;
+
+  document.getElementById('percent').innerText = percent + '%';
+
+  document.getElementById('totalWords').innerText = total;
+
+  document.getElementById('matchedWords').innerText = matched;
+
+  document.getElementById('diffWords').innerText = missing.length + extra.length;
+
+  const status = document.getElementById('status');
+
+  if(percent === 100){
+    status.innerHTML = '✓ Content Matches Exactly';
+    status.className = 'status same';
+  }else{
+    status.innerHTML = '✗ Content Differences Found';
+    status.className = 'status diff';
+  }
+
+  const resultBox = document.getElementById('lineResults');
+
+  resultBox.innerHTML = '';
+
+  if(missing.length){
+
+    const div = document.createElement('div');
+
+    div.className = 'line missing';
+
+    div.innerHTML = `
+      <div class="tag red">Missing From Compare Content</div>
+      <div>${missing.slice(0,200).join(' ')}</div>
+    `;
+
+    resultBox.appendChild(div);
+  }
+
+  if(extra.length){
+
+    const div = document.createElement('div');
+
+    div.className = 'line extra';
+
+    div.innerHTML = `
+      <div class="tag blue">Extra Content Found</div>
+      <div>${extra.slice(0,200).join(' ')}</div>
+    `;
+
+    resultBox.appendChild(div);
+  }
+
+  if(percent === 100){
+
+    const div = document.createElement('div');
+
+    div.className = 'line match';
+
+    div.innerHTML = `
+      <div class="tag green">Perfect Match</div>
+      <div>Both contents contain exactly the same text.</div>
+    `;
+
+    resultBox.appendChild(div);
+  }
+
+  showToast('Comparison Complete');
+}
+
+function clearLeft(){
+  document.getElementById('leftText').value = '';
+}
+
+function clearRight(){
+  document.getElementById('rightText').value = '';
+}
+
+function copyResult(){
+
+  const text = `
+Match Percentage: ${document.getElementById('percent').innerText}
+
+Matched Words: ${document.getElementById('matchedWords').innerText}
+
+Different Words: ${document.getElementById('diffWords').innerText}
+
+Status:
+${document.getElementById('status').innerText}
+`;
+
+  navigator.clipboard.writeText(text);
+
+  showToast('Result Copied');
+}
+
+function pasteSample(){
+
+  document.getElementById('leftText').value =
+`Hello world
+
+This is sample text.
+
+Shopify development services`;
+
+  document.getElementById('rightText').value =
+`hello world this is sample text shopify development services`;
+}
+
+</script>
+
+</body>
+</html>
